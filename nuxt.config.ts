@@ -7,4 +7,13 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  $production: {
+    scripts: {
+      registry: {
+        clarity: {
+          trigger: "onNuxtReady",
+        },
+      },
+    },
+  },
 });
