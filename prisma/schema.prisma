@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model CachedRequest {
+  id           String           @id @default(uuid())
+  requestHash  String           @unique
+  method       String
+  url          String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  responses    CachedResponse[]
+}
+
+model CachedResponse {
+  id             String        @id @default(uuid())
+  cachedRequest  CachedRequest @relation(fields: [requestId], references: [id])
+  requestId      String
+  statusCode     Int
+  headers        Json
+  body           Json
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([requestId, createdAt])
+}
