@@ -36,7 +36,6 @@ interface VenueResult {
 const { data: venues } = await useFetch<VenueSummary[]>("/api/venues");
 const query = ref("");
 const selectedVenue = ref<VenueSummary | null>(null);
-const searchEl = ref<HTMLInputElement | null>(null);
 const showDropdown = ref(false);
 
 const filtered = computed(() => {
@@ -309,10 +308,10 @@ function pageSizeLabel(size: PageSize) {
             <tr v-for="(drink, i) in paginatedDrinks" :key="i">
               <td class="col-name">{{ drink.itemName }}</td>
               <td class="col-option">{{ drink.optionName }}</td>
-              <td class="col-abv">{{ drink.abv.toFixed(1) }}%</td>
+              <td class="col-abv">{{ drink.abv?.toFixed(1) }}%</td>
               <td class="col-vol">{{ drink.volumeMl }}ml</td>
               <td class="col-price">
-                {{ currencySymbol }}{{ drink.price.toFixed(2) }}
+                {{ currencySymbol }}{{ drink.price?.toFixed(2) }}
               </td>
               <td class="col-cpu">
                 <div class="cpu-cell">
@@ -329,7 +328,7 @@ function pageSizeLabel(size: PageSize) {
                   />
                   <span class="cpu-value"
                     >{{ currencySymbol
-                    }}{{ drink.costPerUnit.toFixed(2) }}</span
+                    }}{{ drink.costPerUnit?.toFixed(2) }}</span
                   >
                 </div>
               </td>

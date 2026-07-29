@@ -176,7 +176,10 @@ function extractDrinks(menus: Menu[]): Drink[] {
 
               for (const linked of item.options.linked ?? []) {
                 const tokens = linked.name.toLowerCase().split(" ");
-                const multiplier = parseInt(tokens.find(token => /^\d+$/.test(token)), 10);
+                const multiplier = parseInt(
+                  tokens.find((token) => /^\d+$/.test(token)),
+                  10,
+                );
                 const multiplePrice = parseFloat(
                   tokens[tokens.length - 1].slice(1),
                 );
