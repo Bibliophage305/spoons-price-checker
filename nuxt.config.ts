@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  modules: ["@nuxt/scripts"],
   $production: {
     scripts: {
       registry: {
