@@ -228,7 +228,11 @@
 						<span class="venue-meta"
 							>{{ venue.address.town }}, {{ venue.address.postcode }}</span
 						>
-						<span v-if="venue.isClosed" class="closed-badge">Closed</span>
+						<span
+							v-if="venue.isClosed"
+							class="closed-badge"
+							>Closed</span
+						>
 					</li>
 				</ul>
 
@@ -241,19 +245,34 @@
 			</div>
 		</header>
 
-		<section v-if="loading" class="state-message">
-			<div class="spinner" aria-label="Loading drinks…" />
+		<section
+			v-if="loading"
+			class="state-message"
+		>
+			<div
+				class="spinner"
+				aria-label="Loading drinks…"
+			/>
 			<p>Pulling the menu…</p>
 		</section>
 
-		<section v-else-if="error" class="state-message error">
+		<section
+			v-else-if="error"
+			class="state-message error"
+		>
 			<p>{{ error }}</p>
 		</section>
 
-		<section v-else-if="result" class="results">
+		<section
+			v-else-if="result"
+			class="results"
+		>
 			<div class="results-header">
 				<div>
-					<h2>{{ result.venue.name }}</h2>
+					<h2>
+						{{ result.venue.name }}, {{ result.venue.address.town }},
+						{{ result.venue.address.postcode }}
+					</h2>
 					<p class="results-meta">
 						{{ filteredDrinks.length }} drink{{
 							filteredDrinks.length === 1 ? "" : "s"
@@ -305,7 +324,10 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="(drink, i) in paginatedDrinks" :key="i">
+						<tr
+							v-for="(drink, i) in paginatedDrinks"
+							:key="i"
+						>
 							<td class="col-name">{{ drink.itemName }}</td>
 							<td class="col-option">{{ drink.optionName }}</td>
 							<td class="col-abv">{{ drink.abv.toFixed(1) }}%</td>
@@ -336,12 +358,18 @@
 					</tbody>
 				</table>
 
-				<p v-if="filteredDrinks.length === 0" class="empty">
+				<p
+					v-if="filteredDrinks.length === 0"
+					class="empty"
+				>
 					No drinks match your filters.
 				</p>
 			</div>
 
-			<div v-if="filteredDrinks.length > 0" class="pagination">
+			<div
+				v-if="filteredDrinks.length > 0"
+				class="pagination"
+			>
 				<div class="page-size-picker">
 					<button
 						v-for="size in PAGE_SIZE_OPTIONS"
@@ -353,7 +381,10 @@
 					</button>
 				</div>
 
-				<div v-if="pageSize !== null && totalPages > 1" class="page-nav">
+				<div
+					v-if="pageSize !== null && totalPages > 1"
+					class="page-nav"
+				>
 					<button
 						class="page-btn"
 						:disabled="page === 1"
