@@ -34,7 +34,6 @@ export async function request(
 		maxAgeMs?: number;
 	} = {},
 ): Promise<unknown> {
-	console.log(`Requesting ${verb} ${slug} with params:`, params);
 	const normalised = slug.replace(/^\//, "");
 	const url = new URL(normalised, API_ENDPOINT);
 
@@ -47,18 +46,13 @@ export async function request(
 	const requestInit = { method: verb, url: url.toString() };
 
 	if (useCache) {
-		console.log(`Checking cache for ${verb} ${slug} with params:`, params);
 		const cached = await getCachedResponse(requestInit, maxAgeMs);
 		if (cached !== null) {
 			if (cached.status >= 400) {
 				throw new Error(`Cached error response: ${cached.status}`);
 			}
-			console.log(`Using cached response for ${verb} ${slug} with params:`, params);
 			return cached.body;
 		}
-		console.log(`No cached response for ${verb} ${slug} with params:`, params);
-	} else {
-		console.log(`Cache disabled for ${verb} ${slug} with params:`, params);
 	}
 
 	let lastError: Error | null = null;

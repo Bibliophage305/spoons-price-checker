@@ -51,27 +51,29 @@ export async function getCachedResponse(
 }
 
 export async function cacheResponse(
-	request: CachedRequestInit,
-	response: CachedResponseData,
+    request: CachedRequestInit,
+    response: CachedResponseData,
 ): Promise<void> {
-	const requestHash = makeRequestHash(request);
+    const requestHash = makeRequestHash(request);
 
-	const cachedRequest = await prisma.cachedRequest.upsert({
-		where: { requestHash },
-		update: {},
-		create: {
-			requestHash,
-			method: request.method.toUpperCase(),
-			url: request.url,
-		},
-	});
+    await prisma.$transaction(async (tx) => {
+        const cachedRequest = await tx.cachedRequest.upsert({
+            where: { requestHash },
+            update: {},
+            create: {
+                requestHash,
+                method: request.method.toUpperCase(),
+                url: request.url,
+            },
+        });
 
-	await prisma.cachedResponse.create({
-		data: {
-			requestId: cachedRequest.id,
-			statusCode: response.status,
-			headers: response.headers,
-			body: response.body as object,
-		},
-	});
+        await tx.cachedResponse.create({
+            data: {
+                requestId: cachedRequest.id,
+                statusCode: response.status,
+                headers: response.headers,
+                body: response.body as object,
+            },
+        });
+    });
 }

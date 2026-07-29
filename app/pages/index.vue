@@ -123,6 +123,30 @@
 		return drinks;
 	});
 
+	// Pagination
+	const PAGE_SIZE_OPTIONS = [10, 20, 50, null] as const;
+	type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+
+	const pageSize = ref<PageSize>(10);
+	const page = ref(1);
+
+	const totalPages = computed(() =>
+		pageSize.value === null
+			? 1
+			: Math.ceil(filteredDrinks.value.length / pageSize.value),
+	);
+
+	const paginatedDrinks = computed(() => {
+		if (pageSize.value === null) return filteredDrinks.value;
+		const start = (page.value - 1) * pageSize.value;
+		return filteredDrinks.value.slice(start, start + pageSize.value);
+	});
+
+	// Reset to page 1 when filters or page size change
+	watch([filteredDrinks, pageSize], () => {
+		page.value = 1;
+	});
+
 	const maxCostPerUnit = computed(() =>
 		result.value
 			? Math.max(...result.value.drinks.map((d) => d.costPerUnit))
@@ -136,6 +160,10 @@
 	function sortIcon(key: keyof Drink) {
 		if (sortKey.value !== key) return "↕";
 		return sortDir.value === "asc" ? "↑" : "↓";
+	}
+
+	function pageSizeLabel(size: PageSize) {
+		return size === null ? "Show all" : `Show ${size}`;
 	}
 </script>
 
@@ -180,7 +208,7 @@
 						@blur="onBlur"
 						aria-label="Search for a Wetherspoons venue"
 						aria-autocomplete="list"
-						aria-expanded="showDropdown && filtered.length > 0"
+						:aria-expanded="showDropdown && filtered.length > 0"
 					/>
 				</div>
 
@@ -200,11 +228,7 @@
 						<span class="venue-meta"
 							>{{ venue.address.town }}, {{ venue.address.postcode }}</span
 						>
-						<span
-							v-if="venue.isClosed"
-							class="closed-badge"
-							>Closed</span
-						>
+						<span v-if="venue.isClosed" class="closed-badge">Closed</span>
 					</li>
 				</ul>
 
@@ -217,34 +241,23 @@
 			</div>
 		</header>
 
-		<section
-			v-if="loading"
-			class="state-message"
-		>
-			<div
-				class="spinner"
-				aria-label="Loading drinks…"
-			/>
+		<section v-if="loading" class="state-message">
+			<div class="spinner" aria-label="Loading drinks…" />
 			<p>Pulling the menu…</p>
 		</section>
 
-		<section
-			v-else-if="error"
-			class="state-message error"
-		>
+		<section v-else-if="error" class="state-message error">
 			<p>{{ error }}</p>
 		</section>
 
-		<section
-			v-else-if="result"
-			class="results"
-		>
+		<section v-else-if="result" class="results">
 			<div class="results-header">
 				<div>
 					<h2>{{ result.venue.name }}</h2>
 					<p class="results-meta">
-						{{ filteredDrinks.length }} of {{ result.drinks.length }} drinks
-						shown
+						{{ filteredDrinks.length }} drink{{
+							filteredDrinks.length === 1 ? "" : "s"
+						}}
 					</p>
 				</div>
 
@@ -292,10 +305,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr
-							v-for="(drink, i) in filteredDrinks"
-							:key="i"
-						>
+						<tr v-for="(drink, i) in paginatedDrinks" :key="i">
 							<td class="col-name">{{ drink.itemName }}</td>
 							<td class="col-option">{{ drink.optionName }}</td>
 							<td class="col-abv">{{ drink.abv.toFixed(1) }}%</td>
@@ -306,16 +316,16 @@
 							<td class="col-cpu">
 								<div class="cpu-cell">
 									<div
-                                        class="cpu-bar"
-                                        :style="{
-                                            width:
-                                                (Math.log10(drink.costPerUnit + 1) /
-                                                    Math.log10(maxCostPerUnit + 1)) *
-                                                    100 +
-                                                '%',
-                                        }"
-                                        aria-hidden="true"
-                                    />
+										class="cpu-bar"
+										:style="{
+											width:
+												(Math.log10(drink.costPerUnit + 1) /
+													Math.log10(maxCostPerUnit + 1)) *
+													100 +
+												'%',
+										}"
+										aria-hidden="true"
+									/>
 									<span class="cpu-value"
 										>{{ currencySymbol
 										}}{{ drink.costPerUnit.toFixed(2) }}</span
@@ -326,12 +336,42 @@
 					</tbody>
 				</table>
 
-				<p
-					v-if="filteredDrinks.length === 0"
-					class="empty"
-				>
+				<p v-if="filteredDrinks.length === 0" class="empty">
 					No drinks match your filters.
 				</p>
+			</div>
+
+			<div v-if="filteredDrinks.length > 0" class="pagination">
+				<div class="page-size-picker">
+					<button
+						v-for="size in PAGE_SIZE_OPTIONS"
+						:key="size ?? 'all'"
+						:class="{ active: pageSize === size }"
+						@click="pageSize = size"
+					>
+						{{ pageSizeLabel(size) }}
+					</button>
+				</div>
+
+				<div v-if="pageSize !== null && totalPages > 1" class="page-nav">
+					<button
+						class="page-btn"
+						:disabled="page === 1"
+						@click="page--"
+						aria-label="Previous page"
+					>
+						‹
+					</button>
+					<span class="page-indicator">{{ page }} / {{ totalPages }}</span>
+					<button
+						class="page-btn"
+						:disabled="page === totalPages"
+						@click="page++"
+						aria-label="Next page"
+					>
+						›
+					</button>
+				</div>
 			</div>
 		</section>
 	</main>
@@ -584,24 +624,6 @@
 		display: none;
 	}
 
-	.abv-filter {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.875rem;
-		color: var(--muted);
-	}
-
-	.abv-input {
-		width: 4.5rem;
-		-moz-appearance: textfield;
-	}
-
-	.abv-input::-webkit-inner-spin-button,
-	.abv-input::-webkit-outer-spin-button {
-		-webkit-appearance: none;
-	}
-
 	/* ── Table ── */
 	.table-wrap {
 		overflow-x: auto;
@@ -733,6 +755,91 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	/* ── Pagination ── */
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.page-size-picker {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.page-size-picker button {
+		padding: 0.35rem 0.75rem;
+		border-radius: 6px;
+		border: 1.5px solid var(--border);
+		background: transparent;
+		color: var(--muted);
+		font-family: var(--font-body);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition:
+			background 0.1s,
+			color 0.1s,
+			border-color 0.1s;
+	}
+
+	.page-size-picker button:hover {
+		color: var(--cream);
+		border-color: var(--cream);
+	}
+
+	.page-size-picker button.active {
+		background: var(--amber-dim);
+		border-color: var(--amber);
+		color: var(--cream);
+	}
+
+	.page-nav {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.page-btn {
+		width: 2rem;
+		height: 2rem;
+		border-radius: 6px;
+		border: 1.5px solid var(--border);
+		background: transparent;
+		color: var(--cream);
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+		transition:
+			background 0.1s,
+			border-color 0.1s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.page-btn:hover:not(:disabled) {
+		background: #2d4d2d;
+		border-color: var(--amber);
+	}
+
+	.page-btn:disabled {
+		opacity: 0.3;
+		cursor: default;
+	}
+
+	.page-indicator {
+		font-size: 0.875rem;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		min-width: 4rem;
+		text-align: center;
+	}
+
 	.empty {
 		padding: 2rem 1rem;
 		text-align: center;
@@ -753,6 +860,10 @@
 		}
 		.filter-input {
 			flex: 1;
+		}
+		.pagination {
+			flex-direction: column;
+			align-items: flex-start;
 		}
 	}
 </style>
