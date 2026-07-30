@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@theme {
+  --color-bg: #1a2e1a;
+  --color-bg-alt: #1e291e;
+  --color-bg-input: #243624;
+  --color-bg-hover: #2d4d2d;
+  --color-border: #3d5c3d;
+  --color-amber: #c8861a;
+  --color-cream: #f5eedc;
+  --color-muted: #8fa88f;
+  --color-danger: #c84040;
+  --color-search-bg: #243624;
+  --color-active-button: #c8861a2e;
+
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
