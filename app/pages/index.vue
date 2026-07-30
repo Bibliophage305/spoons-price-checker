@@ -158,13 +158,6 @@ function sortIcon(key: keyof Drink) {
 function pageSizeLabel(size: PageSize) {
   return size === null ? "Show all" : `Show ${size}`;
 }
-
-function cpuBarWidth(costPerUnit: number) {
-  return (
-    (Math.log10(costPerUnit + 1) / Math.log10(maxCostPerUnit.value + 1)) * 100 +
-    "%"
-  );
-}
 </script>
 
 <template>
