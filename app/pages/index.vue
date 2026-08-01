@@ -22,6 +22,11 @@ interface Drink {
   volumeMl: number;
 }
 
+type SortKey = keyof Pick<
+  Drink,
+  "costPerUnit" | "itemName" | "abv" | "price" | "volumeMl"
+>;
+
 interface VenueResult {
   venue: {
     venueRef: number;
@@ -89,18 +94,29 @@ async function loadDrinks(venueRef: number) {
   }
 }
 
-// Table controls
-const sortKey = ref<keyof Drink>("costPerUnit");
+// Sorting — shared between table (toggleSort) and cards (onCardSort)
+const sortKey = ref<SortKey>("costPerUnit");
 const sortDir = ref<"asc" | "desc">("asc");
 const filterName = ref("");
 
-function toggleSort(key: keyof Drink) {
+function toggleSort(key: SortKey) {
   if (sortKey.value === key) {
     sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
   } else {
     sortKey.value = key;
     sortDir.value = "asc";
   }
+}
+
+function onCardSort(key: SortKey, dir: "asc" | "desc") {
+  console.log("sorting", key, dir);
+  sortKey.value = key;
+  sortDir.value = dir;
+}
+
+function sortIcon(key: SortKey) {
+  if (sortKey.value !== key) return "↕";
+  return sortDir.value === "asc" ? "↑" : "↓";
 }
 
 const filteredDrinks = computed(() => {
@@ -142,18 +158,9 @@ watch([filteredDrinks, pageSize], () => {
   page.value = 1;
 });
 
-const maxCostPerUnit = computed(() =>
-  result.value ? Math.max(...result.value.drinks.map((d) => d.costPerUnit)) : 1,
-);
-
 const currencySymbol = computed(
   () => result.value?.venue.currency.symbol ?? "£",
 );
-
-function sortIcon(key: keyof Drink) {
-  if (sortKey.value !== key) return "↕";
-  return sortDir.value === "asc" ? "↑" : "↓";
-}
 
 function pageSizeLabel(size: PageSize) {
   return size === null ? "Show all" : `Show ${size}`;
@@ -219,7 +226,7 @@ function pageSizeLabel(size: PageSize) {
 
         <ul
           v-if="showDropdown && filtered.length > 0"
-          class="border-border bg-search-bg divide-border absolute z-50 mt-2 w-full divide-y-1 divide-solid overflow-hidden rounded-lg border shadow-lg"
+          class="border-border bg-search-bg divide-border absolute z-50 mt-2 w-full divide-y divide-solid overflow-hidden rounded-lg border shadow-lg"
           role="listbox"
         >
           <li
@@ -230,12 +237,13 @@ function pageSizeLabel(size: PageSize) {
             @mousedown.prevent="selectVenue(venue)"
           >
             <span
-              class="venue-name text-cream overflow-none flex-1 text-sm font-medium text-ellipsis whitespace-nowrap"
-              >{{ venue.name }}</span
+              class="text-cream flex-1 overflow-hidden text-sm font-medium text-ellipsis whitespace-nowrap"
             >
-            <span class="text-muted text-xs whitespace-nowrap"
-              >{{ venue.address.town }}, {{ venue.address.postcode }}</span
-            >
+              {{ venue.name }}
+            </span>
+            <span class="text-muted text-xs whitespace-nowrap">
+              {{ venue.address.town }}, {{ venue.address.postcode }}
+            </span>
           </li>
         </ul>
 
@@ -296,96 +304,21 @@ function pageSizeLabel(size: PageSize) {
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="border-border overflow-x-auto rounded-lg border">
-        <table class="w-full border-collapse text-sm">
-          <thead class="bg-bg-alt sticky top-0 z-10">
-            <tr class="border-border border-b">
-              <th
-                class="text-muted min-w-48 px-1 text-left font-semibold whitespace-nowrap"
-              >
-                <button
-                  class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-left text-inherit"
-                  @click="toggleSort('itemName')"
-                >
-                  Drink {{ sortIcon("itemName") }}
-                </button>
-              </th>
-              <th
-                class="text-muted min-w-24 px-3 text-left font-semibold whitespace-nowrap"
-              >
-                Option
-              </th>
-              <th
-                class="text-muted w-16 px-1 text-right font-semibold whitespace-nowrap"
-              >
-                <button
-                  class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-                  @click="toggleSort('abv')"
-                >
-                  ABV {{ sortIcon("abv") }}
-                </button>
-              </th>
-              <th
-                class="text-muted w-20 px-1 text-right font-semibold whitespace-nowrap"
-              >
-                <button
-                  class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-                  @click="toggleSort('volumeMl')"
-                >
-                  Vol {{ sortIcon("volumeMl") }}
-                </button>
-              </th>
-              <th
-                class="text-muted w-20 px-1 text-right font-semibold whitespace-nowrap"
-              >
-                <button
-                  class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-                  @click="toggleSort('price')"
-                >
-                  Price {{ sortIcon("price") }}
-                </button>
-              </th>
-              <th
-                class="text-muted w-20 px-1 text-left font-semibold whitespace-nowrap"
-              >
-                <button
-                  class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-left text-inherit"
-                  @click="toggleSort('costPerUnit')"
-                >
-                  {{ currencySymbol }}/unit {{ sortIcon("costPerUnit") }}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(drink, i) in paginatedDrinks"
-              :key="i"
-              class="border-border even:bg-bg-alt hover:bg-bg-hover border-b transition-colors duration-100 last:border-b-0"
-            >
-              <td class="text-cream min-w-48 px-3 py-3 align-middle">
-                {{ drink.itemName }}
-              </td>
-              <td class="text-muted min-w-24 px-3 py-3 align-middle">
-                {{ drink.optionName }}
-              </td>
-              <td class="text-cream w-16 px-3 py-3 text-right align-middle">
-                {{ drink.abv?.toFixed(1) }}%
-              </td>
-              <td class="text-cream w-20 px-3 py-3 text-right align-middle">
-                {{ drink.volumeMl }}ml
-              </td>
-              <td class="text-cream w-20 px-3 py-3 text-right align-middle">
-                {{ currencySymbol }}{{ drink.price?.toFixed(2) }}
-              </td>
-              <td class="text-cream w-20 px-3 py-3 text-right align-middle">
-                {{ currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
+      <!-- Table (md+) / Cards (mobile) -->
+      <div class="overflow-x-auto">
+        <Table
+          :currencySymbol="currencySymbol"
+          :paginatedDrinks="paginatedDrinks"
+          :toggleSort="toggleSort"
+          :sortIcon="sortIcon"
+          class="hidden md:block"
+        />
+        <Cards
+          :currencySymbol="currencySymbol"
+          :paginatedDrinks="paginatedDrinks"
+          :onCardSort="onCardSort"
+          class="md:hidden"
+        />
         <p
           v-if="filteredDrinks.length === 0"
           class="text-muted px-4 py-8 text-center text-sm"
@@ -427,9 +360,9 @@ function pageSizeLabel(size: PageSize) {
           >
             ‹
           </button>
-          <span class="text-muted min-w-16 text-center text-sm tabular-nums"
-            >{{ page }} / {{ totalPages }}</span
-          >
+          <span class="text-muted min-w-16 text-center text-sm tabular-nums">
+            {{ page }} / {{ totalPages }}
+          </span>
           <button
             class="border-border text-cream enabled:hover:bg-bg-hover enabled:hover:border-amber flex size-8 cursor-pointer items-center justify-center rounded-md border border-solid bg-transparent text-lg disabled:cursor-default disabled:opacity-30"
             :disabled="page === totalPages"
