@@ -64,7 +64,7 @@ function onSortChange(e: Event) {
       </label>
       <select
         id="card-sort"
-        class="bg-search-bg border-border focus:border-amber text-cream min-w-0 rounded-lg border border-solid px-3 py-2 text-sm focus:outline-none"
+        class="bg-search-bg border-border focus:border-amber text-cream min-w-0 rounded-lg border border-r-8 border-solid px-3 py-2 text-sm focus:outline-none"
         @change="onSortChange"
       >
         <option
@@ -116,7 +116,7 @@ function onSortChange(e: Event) {
         <!-- Cost per unit -->
         <div class="relative flex items-center py-1">
           <span
-            class="text-cream relative z-10 pl-2 text-sm font-semibold tabular-nums"
+            class="text-cream relative z-10 text-sm font-semibold tabular-nums"
           >
             {{ props.currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }} per
             unit

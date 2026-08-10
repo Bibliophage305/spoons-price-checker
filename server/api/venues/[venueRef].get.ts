@@ -1,5 +1,4 @@
 import type { Menu, ProductItem, AleItem, Item } from "../../utils/models/menu";
-// import { getAbv } from "../../utils/models/menu";
 
 const SPRITZ_ABV_OVERRIDES: Record<string, number> = {
   "Hugo Spritz": (100 * (0.413 * 25 + 0.11 * 125)) / 150,
