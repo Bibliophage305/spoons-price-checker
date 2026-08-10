@@ -1,4 +1,5 @@
-import type { Menu, ProductItem, AleItem, Item } from "../../utils/models/menu";
+import type { Menu, ProductItem } from "../../utils/models/menu";
+import { getAbv } from "../../utils/models/menu";
 
 const SPRITZ_ABV_OVERRIDES: Record<string, number> = {
   "Hugo Spritz": (100 * (0.413 * 25 + 0.11 * 125)) / 150,
@@ -52,7 +53,7 @@ function resolveAbv(item: ProductItem): number {
 }
 
 function resolveVolumeMl(
-  item: ProductItem,
+  item: Pick<ProductItem, "name" | "description">,
   categoryName: string,
   itemGroupName: string,
   optionName: string,
@@ -111,7 +112,6 @@ function buildAlePriceMap(
   menus: Menu[],
 ): Record<number, Record<string, number>> {
   const map: Record<number, Record<string, number>> = {};
-
   for (const menu of menus) {
     for (const category of menu.categories) {
       for (const itemGroup of category.itemGroups) {
@@ -128,7 +128,6 @@ function buildAlePriceMap(
       }
     }
   }
-
   return map;
 }
 
@@ -176,7 +175,7 @@ function extractDrinks(menus: Menu[]): Drink[] {
               for (const linked of item.options.linked ?? []) {
                 const tokens = linked.name.toLowerCase().split(" ");
                 const multiplier = parseInt(
-                  tokens.find((token) => /^\d+$/.test(token)),
+                  tokens.find((t) => /^\d+$/.test(t)) ?? "1",
                   10,
                 );
                 const multiplePrice = parseFloat(
@@ -204,12 +203,8 @@ function extractDrinks(menus: Menu[]): Drink[] {
             const options = alePriceMap[item.checkout.id] ?? {};
             for (const [optionName, price] of Object.entries(options)) {
               const volumeMl = resolveVolumeMl(
-                // ales don't have a description volume, but they do hit
-                // the pint/half pint keyword branches fine
-                {
-                  description: "",
-                  name: item.fullName,
-                } as unknown as ProductItem,
+                // ales hit the pint/half pint keyword branches — description is unused
+                { name: item.fullName, description: "" },
                 category.name,
                 itemGroup.name ?? "",
                 optionName,
@@ -241,14 +236,21 @@ export default defineEventHandler(async (event) => {
   if (isNaN(venueRef))
     throw createError({ statusCode: 400, message: "Invalid venueRef" });
 
-  // Get the venue summary from the full list so we have the franchise
   const venueSummaries = await allVenues();
   const summary = venueSummaries.find((v) => v.venueRef === venueRef);
   if (!summary)
     throw createError({ statusCode: 404, message: "Venue not found" });
 
   const venue = await getVenue(summary);
-  const menuSummaries = await allMenus(venue);
+  const { summaries: menuSummaries, cachedAt } = await allMenusWithFallback(
+    venue,
+    async (summaries) => {
+      const menus = await Promise.all(
+        summaries.map((ms) => getMenu(venue, ms)),
+      );
+      return extractDrinks(menus).length > 0;
+    },
+  );
   const menus = await Promise.all(
     menuSummaries.map((ms) => getMenu(venue, ms)),
   );
@@ -263,5 +265,6 @@ export default defineEventHandler(async (event) => {
       currency: venue.currency,
     },
     drinks,
+    cachedAt,
   };
 });

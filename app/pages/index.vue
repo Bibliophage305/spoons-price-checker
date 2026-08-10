@@ -35,6 +35,7 @@ interface VenueResult {
     currency: { symbol: string };
   };
   drinks: Drink[];
+  cachedAt: string | null;
 }
 
 // Venue search
@@ -109,7 +110,6 @@ function toggleSort(key: SortKey) {
 }
 
 function onCardSort(key: SortKey, dir: "asc" | "desc") {
-  console.log("sorting", key, dir);
   sortKey.value = key;
   sortDir.value = dir;
 }
@@ -165,6 +165,23 @@ const currencySymbol = computed(
 function pageSizeLabel(size: PageSize) {
   return size === null ? "Show all" : `Show ${size}`;
 }
+
+const cachedAtLabel = computed(() => {
+  if (!result.value?.cachedAt) return "just now";
+  const date = new Date(result.value.cachedAt);
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+});
 </script>
 
 <template>
@@ -291,6 +308,7 @@ function pageSizeLabel(size: PageSize) {
             {{ filteredDrinks.length }} drink{{
               filteredDrinks.length === 1 ? "" : "s"
             }}
+            · prices fetched {{ cachedAtLabel }}
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
