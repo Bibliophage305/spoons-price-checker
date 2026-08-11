@@ -62,20 +62,35 @@ function onSortChange(e: Event) {
       >
         Sort by
       </label>
-      <select
-        id="card-sort"
-        class="bg-search-bg border-border focus:border-amber text-cream min-w-0 rounded-lg border border-r-8 border-solid px-3 py-2 text-sm focus:outline-none"
-        @change="onSortChange"
-      >
-        <option
-          v-for="(option, i) in SORT_OPTIONS"
-          :key="i"
-          :value="i"
-          :selected="selectedSort === option"
+      <div class="grid">
+        <svg
+          class="text-cream pointer-events-none relative right-2 z-10 col-start-1 row-start-1 h-4 w-4 self-center justify-self-end"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden="true"
         >
-          {{ option.label }}
-        </option>
-      </select>
+          <path
+            fill-rule="evenodd"
+            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+
+        <select
+          id="card-sort"
+          class="bg-search-bg border-border focus:border-amber text-cream col-start-1 row-start-1 min-w-0 appearance-none rounded-lg border px-3 py-2 pr-8 text-sm focus:outline-none"
+          @change="onSortChange"
+        >
+          <option
+            v-for="(option, i) in SORT_OPTIONS"
+            :key="i"
+            :value="i"
+            :selected="selectedSort === option"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <!-- Cards -->
