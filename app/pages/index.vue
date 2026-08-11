@@ -1,4 +1,23 @@
 <script setup lang="ts">
+import { type Drink, type SortKey } from "~/types/drinks";
+
+useSeoMeta({
+  title: "Wetherspoons Price Checker",
+  description:
+    "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
+  ogTitle: "Wetherspoons Price Checker",
+  ogDescription:
+    "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
+  ogUrl: "https://spoonsprices.co.uk/",
+  twitterTitle: "Wetherspoons Price Checker",
+  twitterDescription:
+    "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
+});
+
+useHead({
+  link: [{ rel: "canonical", href: "https://spoonsprices.co.uk/" }],
+});
+
 interface VenueSummary {
   venueRef: number;
   name: string;
@@ -11,21 +30,6 @@ interface VenueSummary {
     country: string;
   };
 }
-
-interface Drink {
-  costPerUnit: number;
-  itemName: string;
-  optionName: string;
-  abv: number;
-  price: number;
-  currency: string;
-  volumeMl: number;
-}
-
-type SortKey = keyof Pick<
-  Drink,
-  "costPerUnit" | "itemName" | "abv" | "price" | "volumeMl"
->;
 
 interface VenueResult {
   venue: {
@@ -95,7 +99,7 @@ async function loadDrinks(venueRef: number) {
   }
 }
 
-// Sorting — shared between table (toggleSort) and cards (onCardSort)
+// Sorting — shared between table (toggleSort) and cards (@sort emit)
 const sortKey = ref<SortKey>("costPerUnit");
 const sortDir = ref<"asc" | "desc">("asc");
 const filterName = ref("");
@@ -271,6 +275,20 @@ const cachedAtLabel = computed(() => {
           No venues found for "{{ query }}"
         </p>
       </div>
+
+      <!-- Nav links -->
+      <nav class="mt-4 flex items-center gap-6 text-sm">
+        <NuxtLink
+          to="/about"
+          class="text-muted hover:text-cream transition-colors"
+          >About</NuxtLink
+        >
+        <NuxtLink
+          to="/support"
+          class="text-amber hover:text-cream transition-colors"
+          >Support the site ☕</NuxtLink
+        >
+      </nav>
     </header>
 
     <!-- ── Loading ── -->
@@ -295,7 +313,6 @@ const cachedAtLabel = computed(() => {
 
     <!-- ── Results ── -->
     <section v-else-if="result" class="mx-auto max-w-5xl px-6 pb-16">
-      <!-- Results header -->
       <div
         class="border-border mb-6 flex flex-wrap items-start justify-between gap-6 border-b pb-6"
       >
@@ -311,15 +328,13 @@ const cachedAtLabel = computed(() => {
             · prices fetched {{ cachedAtLabel }}
           </p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <input
-            v-model="filterName"
-            type="text"
-            placeholder="Filter by drink name…"
-            class="bg-search-bg border-border focus:border-amber text-cream placeholder:text-muted rounded-lg border border-solid px-3 py-2 text-sm focus:outline-none"
-            aria-label="Filter drinks by name"
-          />
-        </div>
+        <input
+          v-model="filterName"
+          type="text"
+          placeholder="Filter by drink name…"
+          class="bg-search-bg border-border focus:border-amber text-cream placeholder:text-muted rounded-lg border border-solid px-3 py-2 text-sm focus:outline-none"
+          aria-label="Filter drinks by name"
+        />
       </div>
 
       <!-- Table (md+) / Cards (mobile) -->
@@ -334,8 +349,8 @@ const cachedAtLabel = computed(() => {
         <Cards
           :currencySymbol="currencySymbol"
           :paginatedDrinks="paginatedDrinks"
-          :onCardSort="onCardSort"
           class="md:hidden"
+          @sort="onCardSort"
         />
         <p
           v-if="filteredDrinks.length === 0"

@@ -1,19 +1,11 @@
 <script setup lang="ts">
-interface Drink {
-  costPerUnit: number;
-  itemName: string;
-  optionName: string;
-  abv: number;
-  price: number;
-  currency: string;
-  volumeMl: number;
-}
+import { type Drink, type SortKey } from "~/types/drinks";
 
-const props = defineProps<{
+defineProps<{
   currencySymbol: string;
   paginatedDrinks: Drink[];
-  toggleSort: (key: keyof Drink) => void;
-  sortIcon: (key: keyof Drink) => string;
+  toggleSort: (key: SortKey) => void;
+  sortIcon: (key: SortKey) => string;
 }>();
 </script>
 
@@ -27,9 +19,9 @@ const props = defineProps<{
           >
             <button
               class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-left text-inherit"
-              @click="props.toggleSort('itemName')"
+              @click="toggleSort('itemName')"
             >
-              Drink {{ props.sortIcon("itemName") }}
+              Drink {{ sortIcon("itemName") }}
             </button>
           </th>
           <th
@@ -42,9 +34,9 @@ const props = defineProps<{
           >
             <button
               class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-              @click="props.toggleSort('abv')"
+              @click="toggleSort('abv')"
             >
-              ABV {{ props.sortIcon("abv") }}
+              ABV {{ sortIcon("abv") }}
             </button>
           </th>
           <th
@@ -52,9 +44,9 @@ const props = defineProps<{
           >
             <button
               class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-              @click="props.toggleSort('volumeMl')"
+              @click="toggleSort('volumeMl')"
             >
-              Vol {{ props.sortIcon("volumeMl") }}
+              Vol {{ sortIcon("volumeMl") }}
             </button>
           </th>
           <th
@@ -62,9 +54,9 @@ const props = defineProps<{
           >
             <button
               class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-right text-inherit"
-              @click="props.toggleSort('price')"
+              @click="toggleSort('price')"
             >
-              Price {{ props.sortIcon("price") }}
+              Price {{ sortIcon("price") }}
             </button>
           </th>
           <th
@@ -72,17 +64,16 @@ const props = defineProps<{
           >
             <button
               class="font-inherit hover:text-cream w-full cursor-pointer border-none bg-transparent px-2 py-3 text-left text-inherit"
-              @click="props.toggleSort('costPerUnit')"
+              @click="toggleSort('costPerUnit')"
             >
-              {{ props.currencySymbol }}/unit
-              {{ props.sortIcon("costPerUnit") }}
+              {{ currencySymbol }}/unit {{ sortIcon("costPerUnit") }}
             </button>
           </th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="(drink, i) in props.paginatedDrinks"
+          v-for="(drink, i) in paginatedDrinks"
           :key="i"
           class="border-border even:bg-bg-alt hover:bg-bg-hover border-b transition-colors duration-100 last:border-b-0"
         >
@@ -99,10 +90,10 @@ const props = defineProps<{
             {{ drink.volumeMl }}ml
           </td>
           <td class="text-cream w-20 px-3 py-3 text-right align-middle">
-            {{ props.currencySymbol }}{{ drink.price?.toFixed(2) }}
+            {{ currencySymbol }}{{ drink.price?.toFixed(2) }}
           </td>
           <td class="text-cream w-20 px-3 py-3 text-right align-middle">
-            {{ props.currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }}
+            {{ currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }}
           </td>
         </tr>
       </tbody>

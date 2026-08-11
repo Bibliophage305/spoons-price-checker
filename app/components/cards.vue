@@ -1,54 +1,21 @@
 <script setup lang="ts">
-interface Drink {
-  costPerUnit: number;
-  itemName: string;
-  optionName: string;
-  abv: number;
-  price: number;
-  currency: string;
-  volumeMl: number;
-}
+import { type Drink, type SortKey, SORT_OPTIONS } from "~/types/drinks";
 
-type SortKey = keyof Pick<
-  Drink,
-  "costPerUnit" | "itemName" | "abv" | "price" | "volumeMl"
->;
-
-interface SortOption {
-  label: string;
-  key: SortKey;
-  dir: "asc" | "desc";
-}
-
-const SORT_OPTIONS: SortOption[] = [
-  { label: "Best value first", key: "costPerUnit", dir: "asc" },
-  { label: "Worst value first", key: "costPerUnit", dir: "desc" },
-  { label: "Drink name A-Z", key: "itemName", dir: "asc" },
-  { label: "Drink name Z-A", key: "itemName", dir: "desc" },
-  { label: "ABV lowest first", key: "abv", dir: "asc" },
-  { label: "ABV highest first", key: "abv", dir: "desc" },
-  { label: "Price lowest first", key: "price", dir: "asc" },
-  { label: "Price highest first", key: "price", dir: "desc" },
-  { label: "Volume smallest first", key: "volumeMl", dir: "asc" },
-  { label: "Volume largest first", key: "volumeMl", dir: "desc" },
-];
-
-const props = defineProps<{
+defineProps<{
   currencySymbol: string;
   paginatedDrinks: Drink[];
-  onCardSort: (key: SortOption) => void;
 }>();
 
 const emit = defineEmits<{
   sort: [key: SortKey, dir: "asc" | "desc"];
 }>();
 
-const selectedSort = ref<SortOption>(SORT_OPTIONS[0]);
+const selectedSort = ref(SORT_OPTIONS[0]);
 
 function onSortChange(e: Event) {
   const idx = parseInt((e.target as HTMLSelectElement).value);
   selectedSort.value = SORT_OPTIONS[idx];
-  props.onCardSort(selectedSort.value.key, selectedSort.value.dir);
+  emit("sort", selectedSort.value!.key, selectedSort.value!.dir);
 }
 </script>
 
@@ -75,7 +42,6 @@ function onSortChange(e: Event) {
             clip-rule="evenodd"
           />
         </svg>
-
         <select
           id="card-sort"
           class="bg-search-bg border-border focus:border-amber text-cream col-start-1 row-start-1 min-w-0 appearance-none rounded-lg border px-3 py-2 pr-8 text-sm focus:outline-none"
@@ -100,7 +66,6 @@ function onSortChange(e: Event) {
         :key="i"
         class="border-border bg-bg-alt rounded-lg border p-4"
       >
-        <!-- Name + option -->
         <div class="mb-3">
           <p class="text-cream text-base leading-snug font-semibold">
             {{ drink.itemName }}
@@ -108,7 +73,6 @@ function onSortChange(e: Event) {
           <p class="text-muted mt-0.5 text-xs">{{ drink.optionName }}</p>
         </div>
 
-        <!-- Stats row -->
         <div class="text-muted mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
           <span
             ><span class="text-cream font-medium"
@@ -116,27 +80,15 @@ function onSortChange(e: Event) {
             >
             ABV</span
           >
-          <span
-            ><span class="text-cream font-medium"
-              >{{ drink.volumeMl }}ml</span
-            ></span
-          >
-          <span
-            ><span class="text-cream font-medium"
-              >{{ props.currencySymbol }}{{ drink.price?.toFixed(2) }}</span
-            ></span
+          <span class="text-cream font-medium">{{ drink.volumeMl }}ml</span>
+          <span class="text-cream font-medium"
+            >{{ currencySymbol }}{{ drink.price?.toFixed(2) }}</span
           >
         </div>
 
-        <!-- Cost per unit -->
-        <div class="relative flex items-center py-1">
-          <span
-            class="text-cream relative z-10 text-sm font-semibold tabular-nums"
-          >
-            {{ props.currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }} per
-            unit
-          </span>
-        </div>
+        <p class="text-cream text-sm font-semibold tabular-nums">
+          {{ currencySymbol }}{{ drink.costPerUnit?.toFixed(2) }} per unit
+        </p>
       </div>
     </div>
   </div>
