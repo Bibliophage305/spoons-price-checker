@@ -8,6 +8,14 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   modules: ["@nuxt/scripts"],
+  routeRules: {
+    "/support": {
+      redirect: {
+        to: "https://buymeacoffee.com/bibliophage305",
+        statusCode: 302,
+      },
+    },
+  },
   $production: {
     scripts: {
       registry: {
