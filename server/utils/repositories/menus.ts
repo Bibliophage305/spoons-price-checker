@@ -1,15 +1,3 @@
-import { type CachedResponseData } from "../cache";
-import { slugToUrl } from "../api";
-import {
-  type Menu,
-  type MenuSummary,
-  parseMenu,
-  parseMenuSummary,
-} from "../models/menu";
-import { type Venue } from "../models/venue";
-
-const MENU_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
-
 function menuSlug(venue: Venue, menuSummaryId?: number): string {
   const base = `${venue.franchise}/venues/${venue.venueRef}/sales-areas/${venue.salesAreas[0].id}/menus`;
   return menuSummaryId !== undefined ? `${base}/${menuSummaryId}` : base;
@@ -44,13 +32,6 @@ function menuHasAlcohol(menu: Menu): boolean {
   return false;
 }
 
-function makeFreshFetcher(slug: string): () => Promise<CachedResponseData> {
-  return async () => {
-    const body = await request(slug, { useCache: false });
-    return { status: 200, headers: {}, body, createdAt: new Date() };
-  };
-}
-
 /**
  * Fetches all menu summaries for a venue with staleness-aware fallback.
  * A result is considered useful if the menus it yields contain at least one
@@ -58,7 +39,7 @@ function makeFreshFetcher(slug: string): () => Promise<CachedResponseData> {
  */
 export async function allMenus(
   venue: Venue,
-  maxAgeMs: number = MENU_MAX_AGE_MS,
+  maxAgeMs: number = CACHE_MAX_AGE_MS,
 ): Promise<{ summaries: MenuSummary[]; cachedAt: Date | null }> {
   const slug = menuSlug(venue);
   const requestInit = { method: "GET", url: slugToUrl(slug) };
@@ -92,7 +73,7 @@ export async function allMenus(
 export async function getMenu(
   venue: Venue,
   menuSummary: MenuSummary,
-  maxAgeMs: number = MENU_MAX_AGE_MS,
+  maxAgeMs: number = CACHE_MAX_AGE_MS,
 ): Promise<{ menu: Menu; cachedAt: Date | null }> {
   const slug = menuSlug(venue, menuSummary.id);
   const requestInit = { method: "GET", url: slugToUrl(slug) };

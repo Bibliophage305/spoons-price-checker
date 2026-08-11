@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { prisma } from "./db";
 
+export const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 interface CachedRequestInit {
   method: string;
   url: string;
@@ -24,6 +26,15 @@ function makeRequestHash({ method, url, body }: CachedRequestInit): string {
     Object.keys({ method, url, body: body ?? "" }).sort(),
   );
   return createHash("sha256").update(canonical).digest("hex");
+}
+
+export function makeFreshFetcher(
+  slug: string,
+): () => Promise<CachedResponseData> {
+  return async () => {
+    const body = await request(slug, { useCache: false });
+    return { status: 200, headers: {}, body, createdAt: new Date() };
+  };
 }
 
 export async function getCachedResponse(
@@ -90,7 +101,7 @@ export async function getCachedResponseWithFallback(
   request: CachedRequestInit,
   fetchFresh: () => Promise<CachedResponseData>,
   isUseful: (response: CachedResponseData) => Promise<boolean>,
-  maxAgeMs: number = 24 * 60 * 60 * 1000,
+  maxAgeMs: number = CACHE_MAX_AGE_MS,
 ): Promise<CachedResponseData> {
   // Step 1: recent cache hit that is useful
   const recent = await getCachedResponse(request, maxAgeMs);
