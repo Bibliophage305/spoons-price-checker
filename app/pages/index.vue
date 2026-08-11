@@ -285,6 +285,7 @@ const cachedAtLabel = computed(() => {
         >
         <NuxtLink
           to="/support"
+          target="_blank"
           class="text-amber hover:text-cream transition-colors"
           >Support the site ☕</NuxtLink
         >
