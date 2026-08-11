@@ -242,18 +242,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: "Venue not found" });
 
   const venue = await getVenue(summary);
-  const { summaries: menuSummaries, cachedAt } = await allMenusWithFallback(
-    venue,
-    async (summaries) => {
-      const menus = await Promise.all(
-        summaries.map((ms) => getMenu(venue, ms)),
-      );
-      return extractDrinks(menus).length > 0;
-    },
-  );
-  const menus = await Promise.all(
-    menuSummaries.map((ms) => getMenu(venue, ms)),
-  );
+  const { summaries, cachedAt: summariesCachedAt } = await allMenus(venue);
+
+  const menuResults: { menu: Menu; cachedAt: Date | null }[] = [];
+  for (const ms of summaries) {
+    menuResults.push(await getMenu(venue, ms));
+  }
+  const menus = menuResults.map((r) => r.menu);
+
+  // Use the oldest cachedAt across summaries + menus — that's when the data is from
+  const allCachedAts = [
+    summariesCachedAt,
+    ...menuResults.map((r) => r.cachedAt),
+  ].filter((d): d is Date => d !== null);
+  const cachedAt =
+    allCachedAts.length > 0
+      ? new Date(Math.min(...allCachedAts.map((d) => d.getTime())))
+      : null;
 
   const drinks = extractDrinks(menus);
 

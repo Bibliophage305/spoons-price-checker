@@ -28,16 +28,14 @@ function makeRequestHash({ method, url, body }: CachedRequestInit): string {
 
 export async function getCachedResponse(
   request: CachedRequestInit,
-  maxAgeMs?: number,
+  maxAgeMs: number,
 ): Promise<CachedResponseData | null> {
   const requestHash = makeRequestHash(request);
 
   const cached = await prisma.cachedResponse.findFirst({
     where: {
       cachedRequest: { requestHash },
-      ...(maxAgeMs !== undefined && {
-        createdAt: { gte: new Date(Date.now() - maxAgeMs) },
-      }),
+      createdAt: { gte: new Date(Date.now() - maxAgeMs) },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -54,7 +52,6 @@ export async function getCachedResponse(
 
 /**
  * Returns all cached responses for a request, newest first.
- * Used when the caller needs to inspect multiple entries (e.g. fallback logic).
  */
 export async function getAllCachedResponses(
   request: CachedRequestInit,
@@ -72,6 +69,45 @@ export async function getAllCachedResponses(
     body: r.body,
     createdAt: r.createdAt,
   }));
+}
+
+/**
+ * Fetches a response with staleness-aware fallback logic, delegating the
+ * "is this response useful?" decision to the caller.
+ *
+ * 1. Return the most recent cached response younger than maxAgeMs if useful.
+ * 2. Otherwise fetch fresh from the API. If useful, return it.
+ * 3. Otherwise return the youngest cached response that is useful, regardless of age.
+ * 4. If nothing is useful, return the youngest cached response unconditionally.
+ * 5. If the cache is empty and the fresh fetch wasn't useful, return the fresh response.
+ *
+ * The caller supplies:
+ *   - `fetchFresh`: a function that fetches and caches a new response, returning it
+ *   - `isUseful`: a predicate on CachedResponseData — return true to accept this response
+ *   - `maxAgeMs`: how old a cached response can be before we try refreshing (default 24h)
+ */
+export async function getCachedResponseWithFallback(
+  request: CachedRequestInit,
+  fetchFresh: () => Promise<CachedResponseData>,
+  isUseful: (response: CachedResponseData) => Promise<boolean>,
+  maxAgeMs: number = 24 * 60 * 60 * 1000,
+): Promise<CachedResponseData> {
+  // Step 1: recent cache hit that is useful
+  const recent = await getCachedResponse(request, maxAgeMs);
+  if (recent && (await isUseful(recent))) return recent;
+
+  // Step 2: fresh fetch
+  const fresh = await fetchFresh();
+  if (await isUseful(fresh)) return fresh;
+
+  // Steps 3 & 4: dig through the full cache history
+  const history = await getAllCachedResponses(request);
+  for (const entry of history) {
+    if (await isUseful(entry)) return entry;
+  }
+
+  // Step 5: nothing useful anywhere — youngest cache entry or the fresh response
+  return history[0] ?? fresh;
 }
 
 export async function cacheResponse(

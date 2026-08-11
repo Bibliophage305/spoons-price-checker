@@ -12,12 +12,16 @@ const RETRY_MIN_MS = 5_000;
 const RETRY_MAX_MS = 50_000;
 
 function retryDelay(attempt: number): number {
-  // Exponential backoff: 5s, 10s, 20s... capped at 50s
   return Math.min(RETRY_MIN_MS * 2 ** attempt, RETRY_MAX_MS);
 }
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function slugToUrl(slug: string): string {
+  const normalised = slug.replace(/^\//, "");
+  return new URL(normalised, API_ENDPOINT).toString();
 }
 
 export async function request(
@@ -34,8 +38,7 @@ export async function request(
     maxAgeMs?: number;
   } = {},
 ): Promise<unknown> {
-  const normalised = slug.replace(/^\//, "");
-  const url = new URL(normalised, API_ENDPOINT);
+  const url = new URL(slug.replace(/^\//, ""), API_ENDPOINT);
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {

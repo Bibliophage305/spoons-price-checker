@@ -1,3 +1,5 @@
+import { type CachedResponseData } from "../cache";
+import { slugToUrl } from "../api";
 import {
   type Menu,
   type MenuSummary,
@@ -17,82 +19,93 @@ function parseSummaries(body: unknown): MenuSummary[] {
   return ((body as { data?: unknown[] })?.data ?? []).map(parseMenuSummary);
 }
 
-async function fetchFresh(slug: string): Promise<unknown> {
-  return request(slug, { useCache: false });
+function parseMenuBody(body: unknown): Menu {
+  return parseMenu((body as { data: unknown }).data);
+}
+
+function menuIsNotEmpty(menu: Menu): boolean {
+  for (const category of menu.categories) {
+    for (const itemGroup of category.itemGroups) {
+      if (itemGroup.items.length > 0) return true;
+    }
+  }
+  return false;
+}
+
+function menuHasAlcohol(menu: Menu): boolean {
+  for (const category of menu.categories) {
+    for (const itemGroup of category.itemGroups) {
+      for (const item of itemGroup.items) {
+        if (item.itemType === "ale") return true;
+        if (item.itemType === "product" && item.ageRestriction > 0) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function makeFreshFetcher(slug: string): () => Promise<CachedResponseData> {
+  return async () => {
+    const body = await request(slug, { useCache: false });
+    return { status: 200, headers: {}, body, createdAt: new Date() };
+  };
 }
 
 /**
- * Fetches all menus for a venue with fallback logic, delegating the
- * "is this result useful?" decision to the caller via `hasUsefulResult`.
- *
- * 1. Return the most recent cached response younger than 24h if useful.
- * 2. Otherwise refresh from the API. If the fresh response is useful, return it.
- * 3. Otherwise return the youngest cached response that is useful, regardless of age.
- * 4. If nothing in the cache is useful, return the youngest cached response.
- *
- * `hasUsefulResult` receives the parsed summaries so the caller can fetch
- * full menus and check for drinks, or apply any other domain logic.
+ * Fetches all menu summaries for a venue with staleness-aware fallback.
+ * A result is considered useful if the menus it yields contain at least one
+ * alcoholic item (an ale, or a product with an age restriction).
  */
-export async function allMenusWithFallback(
-  venue: Venue,
-  hasUsefulResult: (summaries: MenuSummary[]) => Promise<boolean>,
-): Promise<{ summaries: MenuSummary[]; cachedAt: Date | null }> {
-  const slug = menuSlug(venue);
-  const requestInit = { method: "GET", url: slug };
-
-  // Step 1: recent cache hit that produces a useful result
-  const recent = await getCachedResponse(requestInit, MENU_MAX_AGE_MS);
-  if (recent) {
-    const summaries = parseSummaries(recent.body);
-    if (await hasUsefulResult(summaries)) {
-      return { summaries, cachedAt: recent.createdAt };
-    }
-  }
-
-  // Step 2: refresh from the API
-  const fresh = await fetchFresh(slug);
-  const freshSummaries = parseSummaries(fresh);
-  if (await hasUsefulResult(freshSummaries)) {
-    return { summaries: freshSummaries, cachedAt: new Date() };
-  }
-
-  // Steps 3 & 4: dig through the full cache history
-  const history = await getAllCachedResponses(requestInit);
-  for (const entry of history) {
-    const summaries = parseSummaries(entry.body);
-    if (await hasUsefulResult(summaries)) {
-      return { summaries, cachedAt: entry.createdAt };
-    }
-  }
-
-  // Nothing useful anywhere — return the youngest entry we have
-  const youngest = history[0];
-  if (!youngest) return { summaries: [], cachedAt: null };
-  return {
-    summaries: parseSummaries(youngest.body),
-    cachedAt: youngest.createdAt,
-  };
-}
-
 export async function allMenus(
   venue: Venue,
-  maxAgeMs?: number,
-): Promise<MenuSummary[]> {
-  const response = (await request(menuSlug(venue), { maxAgeMs })) as {
-    data: unknown[];
+  maxAgeMs: number = MENU_MAX_AGE_MS,
+): Promise<{ summaries: MenuSummary[]; cachedAt: Date | null }> {
+  const slug = menuSlug(venue);
+  const requestInit = { method: "GET", url: slugToUrl(slug) };
+
+  const response = await getCachedResponseWithFallback(
+    requestInit,
+    makeFreshFetcher(slug),
+    async (r) => {
+      const summaries = parseSummaries(r.body);
+      for (const ms of summaries) {
+        const { menu } = await getMenu(venue, ms, maxAgeMs);
+        if (menuHasAlcohol(menu)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    maxAgeMs,
+  );
+
+  return {
+    summaries: parseSummaries(response.body),
+    cachedAt: response.createdAt,
   };
-  return response.data.map(parseMenuSummary);
 }
 
+/**
+ * Fetches a single full menu with staleness-aware fallback.
+ * A result is considered useful if the menu contains at least one alcoholic item.
+ */
 export async function getMenu(
   venue: Venue,
   menuSummary: MenuSummary,
-  maxAgeMs?: number,
-): Promise<Menu> {
-  const response = (await request(menuSlug(venue, menuSummary.id), {
+  maxAgeMs: number = MENU_MAX_AGE_MS,
+): Promise<{ menu: Menu; cachedAt: Date | null }> {
+  const slug = menuSlug(venue, menuSummary.id);
+  const requestInit = { method: "GET", url: slugToUrl(slug) };
+
+  const response = await getCachedResponseWithFallback(
+    requestInit,
+    makeFreshFetcher(slug),
+    async (r) => menuIsNotEmpty(parseMenuBody(r.body)),
     maxAgeMs,
-  })) as {
-    data: unknown;
+  );
+
+  return {
+    menu: parseMenuBody(response.body),
+    cachedAt: response.createdAt,
   };
-  return parseMenu(response.data);
 }
