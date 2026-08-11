@@ -4,7 +4,6 @@ useSeoMeta({
   ogType: "website",
   ogSiteName: "Wetherspoons Price Checker",
   twitterCard: "summary_large_image",
-  twitterSite: "@spoonsprices",
   robots: "index,follow",
 });
 

@@ -6,14 +6,14 @@ useSeoMeta({
   ogTitle: "About — Wetherspoons Price Checker",
   ogDescription:
     "How the Wetherspoons Price Checker works, where the data comes from, and why it exists.",
-  ogUrl: "https://spoonsprices.co.uk/about",
+  ogUrl: "https://pintchecker.co.uk/about",
   twitterTitle: "About — Wetherspoons Price Checker",
   twitterDescription:
     "How the Wetherspoons Price Checker works, where the data comes from, and why it exists.",
 });
 
 useHead({
-  link: [{ rel: "canonical", href: "https://spoonsprices.co.uk/about" }],
+  link: [{ rel: "canonical", href: "https://pintchecker.co.uk/about" }],
 });
 </script>
 

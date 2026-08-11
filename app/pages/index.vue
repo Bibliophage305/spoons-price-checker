@@ -8,14 +8,14 @@ useSeoMeta({
   ogTitle: "Wetherspoons Price Checker",
   ogDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
-  ogUrl: "https://spoonsprices.co.uk/",
+  ogUrl: "https://pintchecker.co.uk/",
   twitterTitle: "Wetherspoons Price Checker",
   twitterDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
 });
 
 useHead({
-  link: [{ rel: "canonical", href: "https://spoonsprices.co.uk/" }],
+  link: [{ rel: "canonical", href: "https://pintchecker.co.uk/" }],
 });
 
 interface VenueSummary {
