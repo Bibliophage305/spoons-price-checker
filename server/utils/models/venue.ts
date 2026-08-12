@@ -1,5 +1,3 @@
-// models/venue.ts
-
 export type FranchiseName =
   | "isle-of-man"
   | "levy"

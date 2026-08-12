@@ -1,5 +1,3 @@
-// models/menu.ts
-
 export interface MenuSummary {
   canOrder: boolean;
   franchise: string;
@@ -181,7 +179,7 @@ export interface Menu extends MenuSummary {
 // In TypeScript we expose it as a plain function to keep the interface a pure data shape.
 export function getAbv(item: ProductItem): number {
   const match = item.description.toLowerCase().match(/(\d+\.?\d*)(?=% abv)/);
-  return match ? parseFloat(match[1]) : 0;
+  return match ? parseFloat(match[1]!) : 0;
 }
 
 export function parseMenuSummary(data: unknown): MenuSummary {
