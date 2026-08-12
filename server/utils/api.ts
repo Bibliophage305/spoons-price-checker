@@ -1,9 +1,3 @@
-import {
-  getCachedResponse,
-  cacheResponse,
-  type CachedResponseData,
-} from "./cache";
-
 const API_ENDPOINT = "https://ca.jdw-apps.net/api/v0.1/";
 const API_HEADERS = {
   Authorization: "Bearer 1|SFS9MMnn5deflq0BMcUTSijwSMBB4mc7NSG2rOhqb2765466",

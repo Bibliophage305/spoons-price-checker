@@ -1,5 +1,3 @@
-import { allVenues } from "../utils/repositories/venues";
-
 export default defineEventHandler(async () => {
   const venueSummaries = await allVenues();
   return venueSummaries.map((v) => ({

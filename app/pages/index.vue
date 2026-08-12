@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Drink, type SortKey } from "~/types/drinks";
+import { type SortKey } from "~/types/drinks";
 
 useSeoMeta({
   title: "Wetherspoons Price Checker",
