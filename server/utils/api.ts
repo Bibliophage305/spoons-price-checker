@@ -1,4 +1,8 @@
-import { getCachedResponse, cacheResponse } from "./cache";
+import {
+  getCachedResponse,
+  cacheResponse,
+  type CachedResponseData,
+} from "./cache";
 
 const API_ENDPOINT = "https://ca.jdw-apps.net/api/v0.1/";
 const API_HEADERS = {
@@ -20,8 +24,21 @@ async function sleep(ms: number): Promise<void> {
 }
 
 export function slugToUrl(slug: string): string {
-  const normalised = slug.replace(/^\//, "");
-  return new URL(normalised, API_ENDPOINT).toString();
+  return new URL(slug.replace(/^\//, ""), API_ENDPOINT).toString();
+}
+
+/**
+ * Returns a fetchFresh function suitable for getCachedResponseWithFallback.
+ * Fetches the slug bypassing the cache, writes the result to the cache,
+ * and returns it as a CachedResponseData.
+ */
+export function makeFreshFetcher(
+  slug: string,
+): () => Promise<CachedResponseData> {
+  return async () => {
+    const body = await request(slug, { useCache: false });
+    return { status: 200, headers: {}, body, createdAt: new Date() };
+  };
 }
 
 export async function request(
@@ -48,7 +65,7 @@ export async function request(
 
   const requestInit = { method: verb, url: url.toString() };
 
-  if (useCache) {
+  if (useCache && maxAgeMs !== undefined) {
     const cached = await getCachedResponse(requestInit, maxAgeMs);
     if (cached !== null) {
       if (cached.status >= 400) {

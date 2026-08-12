@@ -1,5 +1,15 @@
+import { slugToUrl, makeFreshFetcher } from "../api";
+import { getCachedResponseWithFallback, CACHE_MAX_AGE_MS } from "../cache";
+import {
+  parseMenuSummary,
+  parseMenu,
+  type Menu,
+  type MenuSummary,
+} from "../models/menu";
+import { type Venue } from "../models/venue";
+
 function menuSlug(venue: Venue, menuSummaryId?: number): string {
-  const base = `${venue.franchise}/venues/${venue.venueRef}/sales-areas/${venue.salesAreas[0].id}/menus`;
+  const base = `${venue.franchise}/venues/${venue.venueRef}/sales-areas/${venue.salesAreas[0]!.id}/menus`;
   return menuSummaryId !== undefined ? `${base}/${menuSummaryId}` : base;
 }
 
@@ -34,8 +44,13 @@ function menuHasAlcohol(menu: Menu): boolean {
 
 /**
  * Fetches all menu summaries for a venue with staleness-aware fallback.
- * A result is considered useful if the menus it yields contain at least one
- * alcoholic item (an ale, or a product with an age restriction).
+ *
+ * A summary list is considered useful if at least one of its menus contains
+ * an alcoholic item. Note: evaluating usefulness requires fetching each full
+ * menu, so the isUseful check may trigger getMenu calls which are then
+ * discarded when the route handler fetches menus again. This double-fetch is
+ * acceptable given the small number of menus per venue and the fact that
+ * subsequent calls will be cache hits.
  */
 export async function allMenus(
   venue: Venue,
@@ -51,9 +66,7 @@ export async function allMenus(
       const summaries = parseSummaries(r.body);
       for (const ms of summaries) {
         const { menu } = await getMenu(venue, ms, maxAgeMs);
-        if (menuHasAlcohol(menu)) {
-          return true;
-        }
+        if (menuHasAlcohol(menu)) return true;
       }
       return false;
     },
@@ -68,7 +81,8 @@ export async function allMenus(
 
 /**
  * Fetches a single full menu with staleness-aware fallback.
- * A result is considered useful if the menu contains at least one alcoholic item.
+ * A menu is considered useful if it contains at least one item of any kind —
+ * non-alcoholic menus (breakfast, children's, etc.) are valid results.
  */
 export async function getMenu(
   venue: Venue,

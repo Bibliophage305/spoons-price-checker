@@ -1,6 +1,3 @@
-import type { Menu, ProductItem } from "../../utils/models/menu";
-import { getAbv } from "../../utils/models/menu";
-
 const SPRITZ_ABV_OVERRIDES: Record<string, number> = {
   "Hugo Spritz": (100 * (0.413 * 25 + 0.11 * 125)) / 150,
   "Mango & Passionfruit Spritz": (100 * (0.35 * 25 + 0.11 * 125)) / 150,
@@ -40,12 +37,12 @@ const KNOWN_VOLUMES = [
 
 function extractMl(text: string): number | null {
   const match = text.toLowerCase().match(/(\d+\.?\d*)(?=ml)/);
-  return match ? parseInt(match[1]) : null;
+  return match ? parseInt(match[1]!) : null;
 }
 
 function extractUnits(description: string): number | null {
   const match = description.toLowerCase().match(/(\d+\.?\d*)(?= unit)/);
-  return match ? parseFloat(match[1]) : null;
+  return match ? parseFloat(match[1]!) : null;
 }
 
 function resolveAbv(item: ProductItem): number {
@@ -65,7 +62,7 @@ function resolveVolumeMl(
   if (mlFromOption !== null) return mlFromOption;
 
   if (item.name in SPRITZ_VOLUME_OVERRIDES)
-    return SPRITZ_VOLUME_OVERRIDES[item.name];
+    return SPRITZ_VOLUME_OVERRIDES[item.name]!;
 
   for (const [keyword, volume] of SERVE_SIZE_KEYWORDS) {
     if (lower.includes(keyword)) return volume;
@@ -98,16 +95,6 @@ function costPerUnit(price: number, abv: number, volumeMl: number): number {
   return (1000 * price) / (abv * volumeMl);
 }
 
-interface Drink {
-  costPerUnit: number;
-  itemName: string;
-  optionName: string;
-  abv: number;
-  price: number;
-  currency: string;
-  volumeMl: number;
-}
-
 function buildAlePriceMap(
   menus: Menu[],
 ): Record<number, Record<string, number>> {
@@ -119,10 +106,8 @@ function buildAlePriceMap(
           if (item.itemType !== "product") continue;
           for (const option of item.options.portion.options) {
             const checkoutId = item.checkout.id;
-            const optionName = option.value.name;
-            const price = option.value.price.value;
             if (!map[checkoutId]) map[checkoutId] = {};
-            map[checkoutId][optionName] = price;
+            map[checkoutId][option.value.name] = option.value.price.value;
           }
         }
       }
@@ -132,6 +117,8 @@ function buildAlePriceMap(
 }
 
 function extractDrinks(menus: Menu[]): Drink[] {
+  // Keyed on itemName|optionName for deduplication. Ales use fullName
+  // (includes brewery) so same-name ales from different breweries are distinct.
   const drinks = new Map<string, Drink>();
   const alePriceMap = buildAlePriceMap(menus);
 
@@ -174,12 +161,14 @@ function extractDrinks(menus: Menu[]): Drink[] {
 
               for (const linked of item.options.linked ?? []) {
                 const tokens = linked.name.toLowerCase().split(" ");
+                // Linked options are phrased like "x3 for £12.00". We find the
+                // digit token for the multiplier; malformed names fall back to 1.
                 const multiplier = parseInt(
                   tokens.find((t) => /^\d+$/.test(t)) ?? "1",
                   10,
                 );
                 const multiplePrice = parseFloat(
-                  tokens[tokens.length - 1].slice(1),
+                  tokens[tokens.length - 1]!.slice(1),
                 );
                 addDrink({
                   costPerUnit: costPerUnit(
@@ -200,10 +189,12 @@ function extractDrinks(menus: Menu[]): Drink[] {
             const abv = item.abv;
             if (abv === 0) continue;
 
+            // Ale prices are resolved by cross-referencing the ale's checkout ID
+            // with the price map built from product items on the same menu.
             const options = alePriceMap[item.checkout.id] ?? {};
             for (const [optionName, price] of Object.entries(options)) {
+              // Ales only hit the pint/half pint keyword branches; description unused.
               const volumeMl = resolveVolumeMl(
-                // ales hit the pint/half pint keyword branches — description is unused
                 { name: item.fullName, description: "" },
                 category.name,
                 itemGroup.name ?? "",
@@ -250,7 +241,8 @@ export default defineEventHandler(async (event) => {
   }
   const menus = menuResults.map((r) => r.menu);
 
-  // Use the oldest cachedAt across summaries + menus — that's when the data is from
+  // Report the oldest cachedAt across all fetched data — that's the true
+  // "freshness" of the response the user sees.
   const allCachedAts = [
     summariesCachedAt,
     ...menuResults.map((r) => r.cachedAt),

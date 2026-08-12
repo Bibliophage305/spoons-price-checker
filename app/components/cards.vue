@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Drink, type SortKey, SORT_OPTIONS } from "~/types/drinks";
+import { type SortKey, SORT_OPTIONS } from "~/types/drinks";
 
 defineProps<{
   currencySymbol: string;

@@ -17,24 +17,13 @@ export interface CachedResponseData {
 }
 
 function makeRequestHash({ method, url, body }: CachedRequestInit): string {
-  const canonical = JSON.stringify(
-    {
-      method: method.toUpperCase(),
-      url,
-      body: body ?? "",
-    },
-    Object.keys({ method, url, body: body ?? "" }).sort(),
-  );
+  // Sort keys explicitly so the hash is stable regardless of insertion order.
+  const canonical = JSON.stringify({
+    body: body ?? "",
+    method: method.toUpperCase(),
+    url,
+  });
   return createHash("sha256").update(canonical).digest("hex");
-}
-
-export function makeFreshFetcher(
-  slug: string,
-): () => Promise<CachedResponseData> {
-  return async () => {
-    const body = await request(slug, { useCache: false });
-    return { status: 200, headers: {}, body, createdAt: new Date() };
-  };
 }
 
 export async function getCachedResponse(
@@ -61,9 +50,6 @@ export async function getCachedResponse(
   };
 }
 
-/**
- * Returns all cached responses for a request, newest first.
- */
 export async function getAllCachedResponses(
   request: CachedRequestInit,
 ): Promise<CachedResponseData[]> {
@@ -84,18 +70,13 @@ export async function getAllCachedResponses(
 
 /**
  * Fetches a response with staleness-aware fallback logic, delegating the
- * "is this response useful?" decision to the caller.
+ * "is this response useful?" decision to the caller via `isUseful`.
  *
  * 1. Return the most recent cached response younger than maxAgeMs if useful.
- * 2. Otherwise fetch fresh from the API. If useful, return it.
+ * 2. Otherwise fetch fresh. If useful, return it.
  * 3. Otherwise return the youngest cached response that is useful, regardless of age.
- * 4. If nothing is useful, return the youngest cached response unconditionally.
- * 5. If the cache is empty and the fresh fetch wasn't useful, return the fresh response.
- *
- * The caller supplies:
- *   - `fetchFresh`: a function that fetches and caches a new response, returning it
- *   - `isUseful`: a predicate on CachedResponseData — return true to accept this response
- *   - `maxAgeMs`: how old a cached response can be before we try refreshing (default 24h)
+ * 4. If nothing is useful, return the youngest cached entry unconditionally.
+ * 5. If the cache is empty and the fresh response wasn't useful, return the fresh response.
  */
 export async function getCachedResponseWithFallback(
   request: CachedRequestInit,
@@ -103,21 +84,17 @@ export async function getCachedResponseWithFallback(
   isUseful: (response: CachedResponseData) => Promise<boolean>,
   maxAgeMs: number = CACHE_MAX_AGE_MS,
 ): Promise<CachedResponseData> {
-  // Step 1: recent cache hit that is useful
   const recent = await getCachedResponse(request, maxAgeMs);
   if (recent && (await isUseful(recent))) return recent;
 
-  // Step 2: fresh fetch
   const fresh = await fetchFresh();
   if (await isUseful(fresh)) return fresh;
 
-  // Steps 3 & 4: dig through the full cache history
   const history = await getAllCachedResponses(request);
   for (const entry of history) {
     if (await isUseful(entry)) return entry;
   }
 
-  // Step 5: nothing useful anywhere — youngest cache entry or the fresh response
   return history[0] ?? fresh;
 }
 

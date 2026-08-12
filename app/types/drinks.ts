@@ -1,13 +1,3 @@
-export interface Drink {
-  costPerUnit: number;
-  itemName: string;
-  optionName: string;
-  abv: number;
-  price: number;
-  currency: string;
-  volumeMl: number;
-}
-
 export type SortKey = keyof Pick<
   Drink,
   "costPerUnit" | "itemName" | "abv" | "price" | "volumeMl"
