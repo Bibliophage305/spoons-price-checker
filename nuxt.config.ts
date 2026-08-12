@@ -7,7 +7,14 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  modules: ["@nuxt/scripts"],
+  modules: [
+    "@nuxt/scripts",
+    "@nuxtjs/robots",
+    "@nuxtjs/sitemap",
+    "nuxt-schema-org",
+    "nuxt-seo-utils",
+    "nuxt-og-image",
+  ],
   routeRules: {
     "/support": {
       redirect: {
