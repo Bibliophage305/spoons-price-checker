@@ -1,4 +1,9 @@
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  setResponseHeader(
+    event,
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=3600",
+  );
   const venueSummaries = await allVenues();
   return venueSummaries.map((v) => ({
     venueRef: v.venueRef,
