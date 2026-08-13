@@ -241,7 +241,7 @@ export default defineEventHandler(async (event) => {
   }
   const menus = menuResults.map((r) => r.menu);
 
-  // Report the oldest cachedAt across all fetched data — that's the true
+  // Report the oldest cachedAt across all fetched data - that's the true
   // "freshness" of the response the user sees.
   const allCachedAts = [
     summariesCachedAt,

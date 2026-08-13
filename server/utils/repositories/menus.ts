@@ -71,7 +71,7 @@ export async function allMenus(
 
 /**
  * Fetches a single full menu with staleness-aware fallback.
- * A menu is considered useful if it contains at least one item of any kind —
+ * A menu is considered useful if it contains at least one item of any kind -
  * non-alcoholic menus (breakfast, children's, etc.) are valid results.
  */
 export async function getMenu(

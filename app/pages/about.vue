@@ -1,13 +1,13 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: "About — Pintchecker",
+  title: "About - Pintchecker",
   description:
     "How Pintchecker works, where the data comes from, and why it exists.",
-  ogTitle: "About — Pintchecker",
+  ogTitle: "About - Pintchecker",
   ogDescription:
     "How Pintchecker works, where the data comes from, and why it exists.",
   ogUrl: "https://pintchecker.co.uk/about",
-  twitterTitle: "About — Pintchecker",
+  twitterTitle: "About - Pintchecker",
   twitterDescription:
     "How Pintchecker works, where the data comes from, and why it exists.",
 });

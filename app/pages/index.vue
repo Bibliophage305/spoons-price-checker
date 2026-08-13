@@ -13,19 +13,22 @@ function getVenueRefFromRoute(): number | null {
 
 // ── SEO ────────────────────────────────────────────────────────────────────
 useSeoMeta({
-  title: "Pintchecker — Find the cheapest pint at Wetherspoons",
+  title: "Pintchecker - Find the cheapest pint at Wetherspoons",
   description:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
-  ogTitle: "Pintchecker — Find the cheapest pint at Wetherspoons",
+  ogTitle: "Pintchecker - Find the cheapest pint at Wetherspoons",
   ogDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
   ogUrl: "https://pintchecker.co.uk/",
-  twitterTitle: "Pintchecker — Find the cheapest pint at Wetherspoons",
+  twitterTitle: "Pintchecker - Find the cheapest pint at Wetherspoons",
   twitterDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
 });
 useHead({ link: [{ rel: "canonical", href: "https://pintchecker.co.uk/" }] });
-defineOgImage("PintChecker");
+defineOgImage("PintChecker", {
+  title: "Find the cheapest pint.",
+  description: "Every drink, ranked by cost per unit of alcohol.",
+});
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface VenueSummary {

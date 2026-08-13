@@ -24,8 +24,19 @@ export default defineNuxtConfig({
       },
     },
   },
-  ogImage: {
-    fonts: ["Playfair+Display:900", "Inter:400", "Inter:600"],
+  fonts: {
+    families: [
+      {
+        name: "Playfair Display",
+        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        global: true,
+      },
+      {
+        name: "Inter",
+        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        global: true,
+      },
+    ],
   },
   $production: {
     scripts: {

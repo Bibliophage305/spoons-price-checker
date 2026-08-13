@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Global defaults — individual pages override with useSeoMeta/useHead
+// Global defaults - individual pages override with useSeoMeta/useHead
 useSeoMeta({
   ogType: "website",
   ogSiteName: "Wetherspoons Price Checker",
@@ -19,30 +19,12 @@ useHead({
     },
     { name: "format-detection", content: "telephone=no" },
   ],
-  link: [
-    { rel: "icon", href: "/favicon.ico" },
-    { rel: "preconnect", href: "https://fonts.googleapis.com" },
-    { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
-    {
-      rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap",
-    },
-  ],
+  link: [{ rel: "icon", href: "/favicon.ico" }],
 });
 </script>
 
 <template>
   <div>
-    <NuxtPage />
+    <NuxtPage class="bg-bg font-body color-cream min-h-dvh antialiased" />
   </div>
 </template>
-
-<style>
-body {
-  background-color: var(--color-bg);
-  color: var(--color-cream);
-  font-family: var(--font-body);
-  min-height: 100dvh;
-  -webkit-font-smoothing: antialiased;
-}
-</style>
