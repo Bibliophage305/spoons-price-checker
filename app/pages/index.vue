@@ -222,7 +222,7 @@ const cachedAtLabel = computed(() => {
       <div class="relative w-full max-w-lg">
         <div class="relative flex items-center">
           <svg
-            class="text-muted pointer-events-none absolute left-4 h-4 w-4 flex-shrink-0"
+            class="text-muted pointer-events-none absolute left-4 h-4 w-4 shrink-0"
             viewBox="0 0 20 20"
             fill="none"
             aria-hidden="true"
