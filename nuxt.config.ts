@@ -43,6 +43,16 @@ export default defineNuxtConfig({
         weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
         global: true,
       },
+      {
+        name: "Noto Sans",
+        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        global: true,
+      },
+      {
+        name: "Roboto",
+        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        global: true,
+      },
     ],
   },
   $production: {
