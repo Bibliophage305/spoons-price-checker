@@ -25,10 +25,18 @@ useSeoMeta({
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
 });
 useHead({ link: [{ rel: "canonical", href: "https://pintchecker.co.uk/" }] });
-defineOgImage("PintChecker", {
-  title: "Find the cheapest pint.",
-  description: "Every drink, ranked by cost per unit of alcohol.",
-});
+defineOgImage(
+  "PintChecker",
+  {
+    title: "Find the cheapest pint.",
+    description: "Every drink, ranked by cost per unit of alcohol.",
+  },
+  [
+    { key: "og" },
+    // Square for WhatsApp
+    { key: "whatsapp", width: 800, height: 800 },
+  ],
+);
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface VenueSummary {

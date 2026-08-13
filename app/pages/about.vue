@@ -14,10 +14,18 @@ useSeoMeta({
 useHead({
   link: [{ rel: "canonical", href: "https://pintchecker.co.uk/about" }],
 });
-defineOgImage("PintChecker", {
-  title: "About Pintchecker",
-  description: "How it works, where the data comes from, and why it exists.",
-});
+defineOgImage(
+  "PintChecker",
+  {
+    title: "About Pintchecker",
+    description: "How it works, where the data comes from, and why it exists.",
+  },
+  [
+    { key: "og" },
+    // Square for WhatsApp
+    { key: "whatsapp", width: 800, height: 800 },
+  ],
+);
 </script>
 
 <template>
