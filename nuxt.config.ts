@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     "nuxt-schema-org",
     "nuxt-seo-utils",
     "nuxt-og-image",
+    "@nuxt/fonts",
   ],
   routeRules: {
     "/support": {
@@ -22,6 +23,9 @@ export default defineNuxtConfig({
         statusCode: 302,
       },
     },
+  },
+  ogImage: {
+    fonts: ["Playfair+Display:900", "Inter:400", "Inter:600"],
   },
   $production: {
     scripts: {

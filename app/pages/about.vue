@@ -1,19 +1,22 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: "About — Wetherspoons Price Checker",
+  title: "About — Pintchecker",
   description:
-    "How the Wetherspoons Price Checker works, where the data comes from, and why it exists.",
-  ogTitle: "About — Wetherspoons Price Checker",
+    "How Pintchecker works, where the data comes from, and why it exists.",
+  ogTitle: "About — Pintchecker",
   ogDescription:
-    "How the Wetherspoons Price Checker works, where the data comes from, and why it exists.",
+    "How Pintchecker works, where the data comes from, and why it exists.",
   ogUrl: "https://pintchecker.co.uk/about",
-  twitterTitle: "About — Wetherspoons Price Checker",
+  twitterTitle: "About — Pintchecker",
   twitterDescription:
-    "How the Wetherspoons Price Checker works, where the data comes from, and why it exists.",
+    "How Pintchecker works, where the data comes from, and why it exists.",
 });
-
 useHead({
   link: [{ rel: "canonical", href: "https://pintchecker.co.uk/about" }],
+});
+defineOgImage("PintChecker", {
+  title: "About Pintchecker",
+  description: "How it works, where the data comes from, and why it exists.",
 });
 </script>
 

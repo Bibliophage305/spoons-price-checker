@@ -1,34 +1,39 @@
 <script setup lang="ts">
 import { type SortKey } from "~/types/drinks";
+// ── URL state ──────────────────────────────────────────────────────────────
+// venueRef lives in the query string (?v=532) so results are shareable.
+const route = useRoute();
+const router = useRouter();
 
+function getVenueRefFromRoute(): number | null {
+  const v = route.query.v;
+  const n = parseInt(Array.isArray(v) ? (v[0] ?? "") : (v ?? ""));
+  return isNaN(n) ? null : n;
+}
+
+// ── SEO ────────────────────────────────────────────────────────────────────
 useSeoMeta({
-  title: "Wetherspoons Price Checker",
+  title: "Pintchecker — Find the cheapest pint at Wetherspoons",
   description:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
-  ogTitle: "Wetherspoons Price Checker",
+  ogTitle: "Pintchecker — Find the cheapest pint at Wetherspoons",
   ogDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
   ogUrl: "https://pintchecker.co.uk/",
-  twitterTitle: "Wetherspoons Price Checker",
+  twitterTitle: "Pintchecker — Find the cheapest pint at Wetherspoons",
   twitterDescription:
     "Find the cheapest drinks at any Wetherspoons. Every drink ranked by cost per unit of alcohol.",
 });
+useHead({ link: [{ rel: "canonical", href: "https://pintchecker.co.uk/" }] });
+defineOgImage("PintChecker");
 
-useHead({
-  link: [{ rel: "canonical", href: "https://pintchecker.co.uk/" }],
-});
-
+// ── Types ──────────────────────────────────────────────────────────────────
 interface VenueSummary {
   venueRef: number;
   name: string;
   franchise: string;
   isClosed: boolean;
-  address: {
-    town: string;
-    county: string;
-    postcode: string;
-    country: string;
-  };
+  address: { town: string; county: string; postcode: string; country: string };
 }
 
 interface VenueResult {
@@ -42,7 +47,7 @@ interface VenueResult {
   cachedAt: string | null;
 }
 
-// Venue search
+// ── Venue search ───────────────────────────────────────────────────────────
 const { data: venues } = await useFetch<VenueSummary[]>("/api/venues");
 const query = ref("");
 const selectedVenue = ref<VenueSummary | null>(null);
@@ -65,6 +70,7 @@ function selectVenue(venue: VenueSummary) {
   selectedVenue.value = venue;
   query.value = venue.name;
   showDropdown.value = false;
+  router.push({ query: { v: venue.venueRef } });
   loadDrinks(venue.venueRef);
 }
 
@@ -72,6 +78,7 @@ function onInput() {
   selectedVenue.value = null;
   result.value = null;
   showDropdown.value = true;
+  router.replace({ query: {} });
 }
 
 function onBlur() {
@@ -80,7 +87,7 @@ function onBlur() {
   }, 150);
 }
 
-// Drinks
+// ── Drinks ─────────────────────────────────────────────────────────────────
 const result = ref<VenueResult | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -99,7 +106,21 @@ async function loadDrinks(venueRef: number) {
   }
 }
 
-// Sorting — shared between table (toggleSort) and cards (@sort emit)
+// Load from URL on first render
+const initialVenueRef = getVenueRefFromRoute();
+if (initialVenueRef !== null) {
+  await loadDrinks(initialVenueRef);
+  // Pre-fill the search box if we have venue data
+  if (result.value && venues.value) {
+    const match = venues.value.find((v) => v.venueRef === initialVenueRef);
+    if (match) {
+      selectedVenue.value = match;
+      query.value = match.name;
+    }
+  }
+}
+
+// ── Sorting ────────────────────────────────────────────────────────────────
 const sortKey = ref<SortKey>("costPerUnit");
 const sortDir = ref<"asc" | "desc">("asc");
 const filterName = ref("");
@@ -139,7 +160,7 @@ const filteredDrinks = computed(() => {
   return drinks;
 });
 
-// Pagination
+// ── Pagination ─────────────────────────────────────────────────────────────
 const PAGE_SIZE_OPTIONS = [10, 20, 50, null] as const;
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
@@ -191,20 +212,8 @@ const cachedAtLabel = computed(() => {
 <template>
   <main class="min-h-dvh">
     <!-- ── Hero ── -->
-    <header
-      class="flex flex-col items-center gap-3 px-6 pt-20 pb-16 text-center"
-    >
-      <p class="text-amber text-xs font-semibold tracking-widest uppercase">
-        Wetherspoons
-      </p>
-      <h1
-        class="font-display text-cream text-4xl font-black tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
-      >
-        Find the cheapest pint.
-      </h1>
-      <p class="text-muted mb-6 text-base">
-        Every drink, ranked by cost per unit of alcohol.
-      </p>
+    <header class="flex flex-col items-center gap-6 px-6 pt-20 pb-16">
+      <HeroHeading />
 
       <!-- Search -->
       <div class="relative w-full max-w-lg">
@@ -277,7 +286,7 @@ const cachedAtLabel = computed(() => {
       </div>
 
       <!-- Nav links -->
-      <nav class="mt-4 flex items-center gap-6 text-sm">
+      <nav class="flex items-center gap-6 text-sm">
         <NuxtLink
           to="/about"
           class="text-muted hover:text-cream transition-colors"
@@ -285,7 +294,6 @@ const cachedAtLabel = computed(() => {
         >
         <NuxtLink
           to="/support"
-          target="_blank"
           class="text-amber hover:text-cream transition-colors"
           >Support the site ☕</NuxtLink
         >
@@ -394,9 +402,9 @@ const cachedAtLabel = computed(() => {
           >
             ‹
           </button>
-          <span class="text-muted min-w-16 text-center text-sm tabular-nums">
-            {{ page }} / {{ totalPages }}
-          </span>
+          <span class="text-muted min-w-16 text-center text-sm tabular-nums"
+            >{{ page }} / {{ totalPages }}</span
+          >
           <button
             class="border-border text-cream enabled:hover:bg-bg-hover enabled:hover:border-amber flex size-8 cursor-pointer items-center justify-center rounded-md border border-solid bg-transparent text-lg disabled:cursor-default disabled:opacity-30"
             :disabled="page === totalPages"
