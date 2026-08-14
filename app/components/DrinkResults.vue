@@ -105,7 +105,7 @@ const cachedAtLabel = computed(() => {
 <template>
   <section class="mx-auto max-w-5xl px-6 pb-16">
     <div
-      class="border-border mb-6 flex flex-wrap items-start justify-between gap-6 border-b pb-6"
+      class="border-border flex flex-wrap items-start justify-between gap-6 border-b pb-6"
     >
       <div>
         <slot name="venue-name" />
