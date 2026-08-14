@@ -81,7 +81,7 @@ defineOgImage("PintChecker", {
           {{ venueName }}
           <span
             v-if="venueAddress"
-            class="text-muted ml-1 text-lg font-normal"
+            class="text-muted ml-1 text-lg font-normal text-nowrap"
             >{{ venueAddress }}</span
           >
         </h2>
