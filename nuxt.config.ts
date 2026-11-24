@@ -26,7 +26,6 @@ export default defineNuxtConfig({
   routeRules: {
     "/api/venues": { headers: { "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
     "/api/venues/**": { headers: { "cache-control": "public, s-maxage=600, stale-while-revalidate=86400" } },
-    "/venue/**": { swr: 600 },
     "/support": {
       redirect: {
         to: "https://buymeacoffee.com/bibliophage305",
