@@ -8,11 +8,6 @@ const prismaClientSingleton = () => {
   return new PrismaClient({ adapter: pool });
 };
 
-console.log({
-  databaseUrl: !!process.env.DATABASE_URL,
-  directDatabaseUrl: process.env.DIRECT_DATABASE_URL,
-});
-
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
 
 const globalForPrisma = globalThis as unknown as {
