@@ -1,75 +1,35 @@
-# Nuxt Minimal Starter
+# Development Setup
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## Installation
 
-## Setup
-
-Make sure to install dependencies:
+Copy the example environment file **before installing dependencies**, as Prisma requires it:
 
 ```bash
-# npm
-npm install
+cp .env.example .env
+```
 
-# pnpm
-pnpm install
+Install dependencies:
 
-# yarn
+```bash
 yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+## Database Setup
 
-Start the development server on `http://localhost:3000`:
+On first run, initialise the local database:
 
 ```bash
-# npm
-npm run dev
+yarn dlx prisma@7 migrate dev
+```
 
-# pnpm
-pnpm dev
+## Running Locally
 
-# yarn
+Start the development environment:
+
+```bash
 yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+This starts the Nuxt development server and local PostgreSQL database.
 
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+The application will be available at [http://localhost:3000](http://localhost:3000).
